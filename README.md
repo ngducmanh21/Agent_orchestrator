@@ -81,9 +81,3 @@ http://localhost:8080
 2. **AI Code Insights**: AI giải thích chi tiết từng file - chức năng, dependencies, patterns
 3. **BA/SA Analysis**: Tự động phân tích Change Request, đề xuất files cần sửa/tạo mới
 4. **Semantic Search**: Hỏi đáp tự nhiên trên codebase qua vector search
-
-## 📌 Mục tiêu
-
-- Indexing 100% codebase làm knowledge base
-- Build internal Claude Code cho dự án legacy
-- Hỗ trợ BA/SA trong việc phân tích và break down requirements
