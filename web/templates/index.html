@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Orchestrator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;--border:#30363d;--text:#e6edf3;--text2:#8b949e;--accent:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--orange:#db6d28;--purple:#bc8cff}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh}
+.left-panel{width:50%;display:flex;flex-direction:column;border-right:1px solid var(--border)}
+.right-panel{width:50%;display:flex;flex-direction:column}
+/* Header */
+.header{display:flex;align-items:center;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);gap:8px;min-height:40px}
+.header .logo{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--green)}
+.header .logo svg{width:18px;height:18px}
+.header .subtitle{color:var(--text2);font-size:13px}
+/* Status bar */
+.status-bar{display:flex;align-items:center;padding:6px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;gap:16px;flex-wrap:wrap}
+.status-bar .item{display:flex;align-items:center;gap:4px;color:var(--text2)}
+.status-bar .item .icon{font-size:14px}
+.status-bar .value{color:var(--text)}
+.cost{color:var(--green) !important;font-weight:600}
+/* Chat area */
+.chat-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{padding:8px 0;line-height:1.6;font-size:14px}
+.msg.welcome{color:var(--yellow)}
+.msg.command{color:var(--text2)}.msg.command::before{content:'> ';color:var(--accent)}
+.msg.progress{color:var(--text2)}.msg.progress .spin{display:inline-block;animation:spin 1s linear infinite}
+.msg.success{color:var(--green)}
+.msg.error{color:var(--red)}
+.msg.warning{color:var(--yellow)}
+.msg.answer{color:var(--text);background:var(--bg3);border-radius:8px;padding:12px;border-left:3px solid var(--accent)}
+.msg.help{white-space:pre-wrap}
+.msg strong,.msg b{color:var(--accent)}
+.msg code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px;color:var(--yellow)}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Input */
+.input-area{padding:12px 16px;background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px}
+.input-area input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none}
+.input-area input:focus{border-color:var(--accent)}
+.input-area input::placeholder{color:var(--text2)}
+.input-area button{background:var(--accent);border:none;border-radius:8px;padding:10px 16px;color:#fff;cursor:pointer;font-size:16px}
+.input-area button:hover{opacity:0.85}
+/* Right panel tabs */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border)}
+.tab{padding:10px 20px;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab .icon{font-size:15px}
+.tab-content{flex:1;overflow-y:auto;padding:16px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+/* Repo Index */
+.file-tree{display:flex;flex-direction:column;gap:2px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.file-item:hover{background:var(--bg3)}
+.file-item.selected{background:var(--accent);background:rgba(88,166,255,0.15)}
+.file-item .name{display:flex;align-items:center;gap:8px}
+.file-item .name .dot{width:8px;height:8px;border-radius:50%}
+.file-item .name .dot.indexed{background:var(--green)}
+.file-item .name .dot.pending{background:var(--text2)}
+.file-item .tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.file-item .tag.CORE{background:rgba(63,185,80,0.15);color:var(--green)}
+.file-item .tag.OTHER{background:rgba(139,148,158,0.15);color:var(--text2)}
+/* AI Insights */
+.insight-detail{padding:16px;background:var(--bg3);border-radius:8px;line-height:1.8;font-size:14px}
+.insight-detail h2{color:var(--accent);margin-bottom:8px}
+.insight-detail h3{color:var(--yellow);margin-top:12px}
+.insight-detail ul{padding-left:20px}
+.insight-detail code{background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--yellow)}
+/* BA & SA */
+.cr-content{line-height:1.8;font-size:14px}
+.cr-content h1,.cr-content h2{color:var(--accent);margin:16px 0 8px}
+.cr-content h3{color:var(--yellow);margin:12px 0 6px}
+.cr-content h4{color:var(--orange);margin:8px 0 4px}
+.cr-content ul{padding-left:20px;margin:4px 0}
+.cr-content code{background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--yellow)}
+.cr-content .export-btn{float:right;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px}
+.cr-content .export-btn:hover{border-color:var(--accent)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text2);font-size:14px;gap:8px}
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text2)}
+/* Markdown basic rendering */
+.md-render strong{color:var(--accent)}
+.md-render em{color:var(--yellow)}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Left Panel: Chat -->
+  <div class="left-panel">
+    <div class="header">
+      <div class="logo">⬡ AGENT</div>
+      <div class="subtitle">.orchestrator</div>
+    </div>
+    <div class="status-bar" id="statusBar">
+      <div class="item"><span class="icon">📦</span> Repo: <span class="value" id="stRepoName">-</span></div>
+      <div class="item"><span class="icon">📋</span> Priority: <span class="value" id="stPriority">-</span></div>
+      <div class="item"><span class="icon">💰</span> Est. Cost: <span class="value cost" id="stCost">$0.0000</span></div>
+    </div>
+    <div class="chat-area" id="chatArea"></div>
+    <div class="input-area">
+      <input type="text" id="cmdInput" placeholder="Gõ lệnh /setup, /scan, /ask, /cr..." autocomplete="off">
+      <button id="sendBtn">➤</button>
+    </div>
+  </div>
+
+  <!-- Right Panel: Tabs -->
+  <div class="right-panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="repoIndex"><span class="icon">📁</span> Repo Index</div>
+      <div class="tab" data-tab="aiInsights"><span class="icon">💡</span> AI Insights</div>
+      <div class="tab" data-tab="baSaPlan"><span class="icon">📋</span> BA & SA Plan (CR)</div>
+    </div>
+    <!-- Tab: Repo Index -->
+    <div class="tab-content">
+      <div class="tab-pane active" id="repoIndex">
+        <div class="empty-state" id="repoEmpty">
+          <div>Gõ /setup và /scan để bắt đầu.</div>
+        </div>
+        <div class="file-tree" id="fileTree" style="display:none"></div>
+      </div>
+      <div class="tab-pane" id="aiInsights">
+        <div class="empty-state" id="insightEmpty">
+          <div>Chọn một file từ Repo Index để xem AI Insight.</div>
+        </div>
+        <div class="insight-detail" id="insightDetail" style="display:none"></div>
+      </div>
+      <div class="tab-pane" id="baSaPlan">
+        <div class="empty-state" id="crEmpty">
+          <div>Dùng lệnh /cr để tạo BA & SA Plan.</div>
+        </div>
+        <div class="cr-content" id="crContent" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Simple markdown to HTML
+function md(text){
+  if(!text)return '';
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs,function(m){return '<ul>'+m+'</ul>'})
+    .replace(/<\/ul>\s*<ul>/g,'')
+    .replace(/\n/g,'<br>');
+}
+
+// WebSocket
+let ws;
+function connect(){
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+  ws=new WebSocket(proto+'//'+location.host+'/ws');
+  ws.onopen=()=>console.log('WS connected');
+  ws.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='message') addMessage(msg.content,msg.msg_type);
+    if(msg.type==='state_update') updateState(msg.data);
+  };
+  ws.onclose=()=>setTimeout(connect,2000);
+}
+
+function send(cmd){
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({command:cmd}));
+    addMessage(cmd,'command');
+  }
+}
+
+// Chat
+const chatArea=document.getElementById('chatArea');
+function addMessage(content,type){
+  const div=document.createElement('div');
+  div.className='msg '+(type||'info');
+  div.innerHTML=md(content);
+  chatArea.appendChild(div);
+  chatArea.scrollTop=chatArea.scrollHeight;
+}
+
+// Input
+const input=document.getElementById('cmdInput');
+const sendBtn=document.getElementById('sendBtn');
+input.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&input.value.trim()){send(input.value.trim());input.value='';}});
+sendBtn.addEventListener('click',()=>{if(input.value.trim()){send(input.value.trim());input.value='';}});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// State update
+function updateState(data){
+  if(!data||!data.repo)return;
+  const r=data.repo;
+  document.getElementById('stRepoName').textContent=r.name||'-';
+  document.getElementById('stPriority').textContent=r.priority_folders?'['+r.priority_folders.join(', ')+']':'-';
+  document.getElementById('stCost').textContent='$'+(r.estimated_cost||0).toFixed(4);
+  // Update file tree
+  if(r.files&&Object.keys(r.files).length>0){
+    document.getElementById('repoEmpty').style.display='none';
+    document.getElementById('fileTree').style.display='flex';
+    renderFileTree(r.files);
+  }
+  // Update CR
+  if(r.cr_results&&r.cr_results.ba){
+    document.getElementById('crEmpty').style.display='none';
+    document.getElementById('crContent').style.display='block';
+    renderCR(r.cr_results);
+  }
+}
+
+function renderFileTree(files){
+  const tree=document.getElementById('fileTree');
+  tree.innerHTML='';
+  for(const[path,info]of Object.entries(files)){
+    const div=document.createElement('div');
+    div.className='file-item';
+    div.innerHTML=`
+      <div class="name">
+        <span class="dot ${info.indexed?'indexed':'pending'}"></span>
+        <span>📄 ${info.relative_path||path}</span>
+      </div>
+      <span class="tag ${info.priority_tag}">${info.priority_tag}</span>
+    `;
+    div.addEventListener('click',()=>showInsight(path,info));
+    tree.appendChild(div);
+  }
+}
+
+function showInsight(path,info){
+  // Switch to AI Insights tab
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.getElementById('aiInsights').classList.add('active');
+
+  const detail=document.getElementById('insightDetail');
+  if(info.insight){
+    document.getElementById('insightEmpty').style.display='none';
+    detail.style.display='block';
+    detail.innerHTML=md(info.insight);
+  }else{
+    document.getElementById('insightEmpty').style.display='flex';
+    document.getElementById('insightEmpty').innerHTML='<div>File: <code>'+path+'</code><br>Chưa có AI Insight. Chạy /scan trước.</div>';
+    detail.style.display='none';
+  }
+}
+
+function renderCR(cr){
+  const el=document.getElementById('crContent');
+  el.innerHTML=`
+    <button class="export-btn" onclick="exportCR()">📋 Export Plan</button>
+    <h1>🔍 1. Business Analyst (Impact Analysis)</h1>
+    <div>${md(cr.ba)}</div>
+    <hr style="border-color:var(--border);margin:24px 0">
+    <h1>⚙️ 2. Solution Architect (Technical Breakdown)</h1>
+    <div>${md(cr.sa)}</div>
+  `;
+}
+
+function exportCR(){
+  fetch('/api/cr').then(r=>r.json()).then(data=>{
+    const text='# BA & SA Plan\n\n## BA Analysis\n'+data.ba+'\n\n## SA Analysis\n'+data.sa;
+    const blob=new Blob([text],{type:'text/markdown'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='ba_sa_plan.md';
+    a.click();
+  });
+}
+
+// Fetch initial state
+async function init(){
+  try{
+    const res=await fetch('/api/status');
+    const data=await res.json();
+    updateState(data);
+  }catch(e){}
+  connect();
+}
+init();
+</script>
+</body>
+</html>
