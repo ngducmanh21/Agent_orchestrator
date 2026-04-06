@@ -86,16 +86,16 @@ Agent Orchestrator có thể chạy như một **MCP (Model Context Protocol) Se
 ```
 ┌─────────────────────┐     stdio (JSON-RPC)     ┌──────────────────────┐
 │   VS Code / Cline   │ ◄──────────────────────► │   MCP Server         │
-│   Cursor / Claude    │                          │   (agent_orchestrator│
-│   Code / Agent       │                          │    /mcp/server.py)   │
+│   Cursor / Claude    │                         │   (agent_orchestrator│
+│   Code / Agent       │                         │    /mcp/server.py)   │
 └─────────────────────┘                          └──────┬───────────────┘
                                                         │
                                            ┌────────────┼────────────────┐
                                            │            │                │
                                     ┌──────▼──┐  ┌──────▼──┐  ┌─────────▼──┐
-                                    │  Claude  │  │  Qdrant │  │ File System│
-                                    │  API     │  │  Vector │  │ (repos)    │
-                                    │          │  │  DB     │  │            │
+                                    │  Claude │  │  Qdrant │  │ File System│
+                                    │  API    │  │  Vector │  │ (repos)    │
+                                    │         │  │  DB     │  │            │
                                     └─────────┘  └─────────┘  └────────────┘
 ```
 
