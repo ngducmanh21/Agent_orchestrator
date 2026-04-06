@@ -1,4 +1,7 @@
 services:
+  # ============================================================
+  # Web UI - Admin interface for indexing and managing projects
+  # ============================================================
   orchestrator:
     build: .
     container_name: agent-orchestrator
@@ -20,6 +23,9 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ============================================================
+  # Qdrant - Vector database for semantic search
+  # ============================================================
   qdrant:
     image: qdrant/qdrant:v1.12.4
     container_name: agent-qdrant
